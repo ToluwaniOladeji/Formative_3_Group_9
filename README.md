@@ -24,7 +24,7 @@ Columns used:
 - `father`
 - `childHeight`
 
-The program combines both columns into one unlabeled dataset (a father with several children appears once per child, giving 1,868 heights).
+The program combines father and child heights into one unlabeled dataset. Each father's height is included once per family, while every child's height is retained.
 
 | Height |
 |---------|
@@ -141,6 +141,9 @@ Assume one height observation `x = 68` and the initial parameters:
 | σ²        | 10.96      | 10.96 |
 | π         | 0.5        | 0.5 |
 
+Formula for getting gaussian probabilities :
+f(x) = (1 / (sigma * sqrt(2 * pi))) * exp(-((x - mu)^2) / (2 * sigma^2))
+
 Gaussian probabilities:
 
 ```
@@ -225,33 +228,33 @@ After each update we calculate the **log-likelihood**, which measures how well t
 **Stopping condition:** stop when the **log-likelihood changes negligibly** between two iterations (the change is smaller than `tolerance`). The number of iterations is therefore not fixed.
 
 ```python
-tolerance = 0.01
-max_iterations = 10000      # safety limit only
+tolerance = 1e-2
+max_iterations = 100      # safety limit only
 ```
 
-In our run, the change drops below the tolerance at **iteration 7**.
+In the plotted run, the log-likelihood continues to improve and gradually levels off, approaching convergence by the later iterations
 
 ---
 
-# Optimization Tracking Table
+## Optimization Tracking Table
 
-Iteration 0 is the initialization (before any update).
+Iteration 0 represents the initialization, before any parameter updates. The table shows the first five iterations and the final three iterations; intermediate iterations are omitted for readability.
 
-| Iteration | μ₁ (Children) | μ₂ (Fathers) | σ₁² | σ₂² | π₁ | π₂ | Log-Likelihood |
-|:---------:|------------:|------------:|-----------------:|-----------------:|---:|---:|---------------:|
-| 0 (Initialization) | 64.6603 | 71.2827 | 10.9639 | 10.9639 | 0.5000 | 0.5000 | -5117.4118 |
-| 1 | 65.8889 | 69.9436 | 8.1515 | 5.6309 | 0.4864 | 0.5136 | -4866.5010 |
-| 2 | 65.8721 | 69.9197 | 8.5488 | 5.3198 | 0.4813 | 0.5187 | -4864.5545 |
-| 3 | 65.8624 | 69.9094 | 8.6838 | 5.2163 | 0.4788 | 0.5212 | -4864.2930 |
-| 4 | 65.8558 | 69.9037 | 8.7332 | 5.1798 | 0.4773 | 0.5227 | -4864.2437 |
-| ... | | | | | | | |
-| 7 (converged) | 65.8408 | 69.8944 | 8.7478 | 5.1692 | 0.4744 | 0.5256 | -4864.2075 |
+| Iteration | Mean 1  | Mean 2  | Variance 1  | Variance 2  | Weight 1  | Weight 2  | Log-Likelihood |
+|:---------:|-------------------:|-------------------:|---------------------------:|---------------------------:|--------------------:|--------------------:|---------------:|
+| **0 (Init)** | 63.6414 | 70.7756 | 12.7241 | 12.7241 | 0.5000 | 0.5000 | -3194.5755 |
+| 1 | 64.9339 | 69.4553 | 7.9124 | 7.3183 | 0.4969 | 0.5031 | -3053.3088 |
+| 2 | 64.8745 | 69.5053 | 7.7363 | 6.9965 | 0.4960 | 0.5040 | -3052.1871 |
+| 3 | 64.8207 | 69.5548 | 7.5033 | 6.7466 | 0.4956 | 0.5044 | -3051.1676 |
+| 4 | 64.7715 | 69.6005 | 7.2673 | 6.5289 | 0.4953 | 0.5047 | -3050.2528 |
+| ⋮ | ⋮ | ⋮ | ⋮ | ⋮ | ⋮ | ⋮ | ⋮ |
+| 17 | 64.4941 | 69.7814 | 5.9551 | 5.5365 | 0.4866 | 0.5134 | -3047.2761 |
+| 18 | 64.4874 | 69.7795 | 5.9340 | 5.5338 | 0.4858 | 0.5142 | -3047.2655 |
+| **19 (Final)** | **64.4813** | **69.7771** | **5.9158** | **5.5336** | **0.4850** | **0.5150** | **-3047.2561** |
 
 ---
 
 # Distribution Before and After EM
-
-![Distribution before and after EM](em_before_after.png)
 
 The grey bars are the same unlabeled heights in both plots. Only the Gaussians change.
 
@@ -269,13 +272,35 @@ For a new height, Bayes' rule with the learned parameters gives the posterior pr
 Enter test height: 67
 
 Prediction for: 67.0
-Probability it is a Child : 0.590952 (59.10 %)
-Probability it is a Father: 0.409048 (40.90 %)
+Probability it is a Child : 0.516826 (51.68 %)
+Probability it is a Father: 0.483174 (48.32 %)
 Sum of probabilities      : 1.0
 Decision -> Child
 ```
 
 ---
+VISUALIZATIONS
+
+<img width="859" height="470" alt="histogram and gaussian mixture" src="https://github.com/user-attachments/assets/e0571d9b-e9c4-4a08-8fdd-5e37be3b6a2f" />
+
+Histogram with Fitted Gaussian Mixture
+The graph compares the observed height distribution with the two Gaussian distributions learned by the EM algorithm.
+- Blue bars: Show the frequency distribution of the combined father and child heights.
+- Orange curve (Gaussian 1): Represents the first group, identified in the README as children, with a lower mean.
+- Green curve (Gaussian 2): Represents the second group, identified as fathers, with a higher mean.
+- Red curve (combined mixture): Shows the overall distribution produced by combining both Gaussians using their mixing coefficients.
+Conclusion: The two Gaussian distributions capture different parts of the height distribution, while the combined mixture represents the overall pattern of the data.
+
+
+<img width="871" height="470" alt="EM algorith convergence" src="https://github.com/user-attachments/assets/86814db2-d9b4-43f9-b89b-863c1379b788" />
+
+EM Algorithm Convergence
+The graph shows how the log-likelihood improves as the EM algorithm updates the Gaussian parameters.
+- Initial stage: The log-likelihood increases sharply, showing a significant improvement in the model's fit.
+- Later iterations: The improvements become progressively smaller.
+- Convergence: The curve levels off near −3047, indicating that the model's log-likelihood has stabilized.
+Conclusion: The EM algorithm is approaching convergence because further iterations produce very little improvement.
+
 
 # Running the Project
 
