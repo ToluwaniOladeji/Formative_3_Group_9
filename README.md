@@ -302,3 +302,106 @@ Enter test height:
 ```
 
 ---
+
+# Part 2: Bayesian Probability on IMDb Movie Reviews
+
+**Owner:** Oladeji Toluwani  |  **Notebook:** `formative3_group_9.ipynb` (Part 2 section)
+
+## 1. What we set out to do
+
+Use Bayes' theorem to measure how strongly individual keywords signal a **positive** review. For each keyword we compute four probabilities and show them in a table:
+
+| Quantity | Meaning | How we compute it |
+|---|---|---|
+| Prior `P(Positive)` | Share of all reviews that are positive | positive reviews / total reviews |
+| Likelihood `P(keyword given Positive)` | Share of positive reviews that contain the keyword | positive reviews containing the keyword / positive reviews |
+| Marginal `P(keyword)` | Share of all reviews that contain the keyword | reviews containing the keyword / total reviews |
+| Posterior `P(Positive given keyword)` | Chance a review is positive, given that it contains the keyword | Bayes' theorem (below) |
+
+$$P(\text{Pos}\mid kw)=\frac{P(kw\mid \text{Pos})\;P(\text{Pos})}{P(kw)}$$
+
+**Conditional chosen:** `P(Positive | keyword)` only. We did not compute `P(Negative | keyword)`, as the brief requires.
+
+**Restriction:** basic Python only. The code uses the standard-library `csv` and `re` modules. There are no ML libraries, no pandas and no NumPy in this part.
+
+## 2. Dataset
+
+IMDb Movie Reviews dataset: https://www.kaggle.com/datasets/lakshmi25npathi/imdb-dataset-of-50k-movie-reviews, with columns `review` and `sentiment`.
+
+- 50,000 reviews in total
+- 25,000 positive and 25,000 negative, so the prior is exactly **0.5000**
+
+## 3. Keywords and why we chose them
+
+We picked four positive and four negative words before looking at the results.
+
+| Keyword | Expected | Reason |
+|---|---|---|
+| excellent | positive | Strong, unambiguous praise, rarely used neutrally |
+| wonderful | positive | Emotional, enthusiastic word applied to the whole film or a performance |
+| amazing | positive | Common superlative; tests whether a looser praise word is as reliable as the formal ones |
+| great | positive | Deliberately the most *common* positive word. We expected a high `P(keyword)` but a weaker posterior. It is our contrast case |
+| terrible | negative | Direct, strong condemnation |
+| awful | negative | Similar to "terrible", so we can check the two agree |
+| waste | negative | Mostly appears in "waste of time / money / talent", a complaint specific to bad reviews |
+| boring | negative | The most frequent complaint about pacing and plot |
+
+## 4. How the code works
+
+All logic lives in small functions (the DRY principle), so the same code handles every keyword.
+
+| Function | What it does |
+|---|---|
+| `tokenize(text)` | Lowercases the review, removes HTML `<br />` tags, and returns the **set** of words in it |
+| `count_reviews(path, keywords)` | Reads the CSV once. For every review it counts: total reviews, positive reviews, reviews containing each keyword, and positive reviews containing each keyword |
+| `bayes_posterior(prior, likelihood, marginal)` | Applies Bayes' theorem. Returns 0 if the marginal is 0, to avoid dividing by zero |
+| `bayes_rows(counts, keywords)` | Builds prior, likelihood, marginal and posterior for each keyword |
+| `print_bayes_table(rows)` | Prints the results as a markdown table |
+
+**Design decision:** `tokenize` returns a set, so a review that says "great" five times still counts once. Each probability is therefore "the share of *reviews* containing the word", not "the share of *word occurrences*".
+
+**Sanity check:** a final cell recomputes `P(Positive | keyword)` directly as positive-reviews-with-keyword / all-reviews-with-keyword. This is the same quantity reached a different way. It matches the Bayes result for all eight keywords, which confirms the implementation.
+
+## 5. Worked example: "excellent"
+
+- Prior: 25,000 / 50,000 = **0.5000**
+- Likelihood: 2,865 positive reviews contain it, 2,865 / 25,000 = **0.1146**
+- Marginal: 3,549 reviews contain it, 3,549 / 50,000 = **0.0710**
+- Posterior: 0.1146 × 0.5000 / 0.0710 = **0.8073**
+
+Direct check: 2,865 / 3,549 = 0.8073. This agrees with the Bayes result.
+
+## 6. Results
+
+| Keyword | Prior P(Pos) | Likelihood P(kw given Pos) | Marginal P(kw) | Posterior P(Pos given kw) |
+|---|---|---|---|---|
+| excellent | 0.5000 | 0.1146 | 0.0710 | 0.8073 |
+| wonderful | 0.5000 | 0.0902 | 0.0555 | 0.8120 |
+| amazing | 0.5000 | 0.0671 | 0.0431 | 0.7783 |
+| great | 0.5000 | 0.3387 | 0.2512 | 0.6741 |
+| terrible | 0.5000 | 0.0152 | 0.0539 | 0.1413 |
+| awful | 0.5000 | 0.0112 | 0.0575 | 0.0977 |
+| waste | 0.5000 | 0.0070 | 0.0507 | 0.0687 |
+| boring | 0.5000 | 0.0236 | 0.0610 | 0.1938 |
+
+### Plot
+ 
+`plot_posteriors(rows, positive_keywords)` draws a two-panel figure and saves it as `part2_bayes_posteriors.png`.
+ 
+- **Left:** a bar per keyword for the posterior `P(Positive | keyword)`, green for the keywords we expected to be positive and red for negative, with a dashed line at the 0.5 prior. A bar right of the line means the keyword raises the chance a review is positive; left of it lowers the chance.
+- **Right:** the likelihood `P(keyword | Positive)` next to the marginal `P(keyword)` for each keyword. These are the two quantities the posterior is built from, so the panel shows *why* a keyword scores high or low. It also shows why *great* is weak: it is very common overall (large marginal), so it separates the classes less.
+
+## 7. What the results tell us
+
+- **Positive keywords** have posteriors well above the 0.5 prior, from 0.67 to 0.81. **Negative keywords** are well below it, from 0.07 to 0.19. Every word moves the probability in the direction we predicted.
+- **Strongest indicators:** *wonderful* (0.812) and *excellent* (0.807) for positive; *waste* (0.069) and *awful* (0.098) for negative.
+- **Weakest:** *great* (0.674). Its likelihood is the highest (33.9 % of positive reviews contain it), but its marginal is also the highest (25.1 % of all reviews). A word found in a quarter of all reviews cannot discriminate much. Phrases such as "not great" are a plausible cause, but this is a hypothesis: our method counts whether a word appears, not how it is used.
+- **Surprise:** *boring* (0.194) is a weaker negative signal than *terrible* (0.141), *awful* or *waste*. Positive reviews can say "never boring", and a review can call part of a film boring while still liking it overall.
+- **Why the prior matters little here:** because the prior is exactly 0.5, the posterior equals `P(kw|Pos) / (P(kw|Pos) + P(kw|Neg))`. It depends only on how much more often a word appears in one class than the other.
+
+## 8. Limitations
+
+- Counting is **presence-only**. It ignores negation ("not good"), sarcasm and context.
+- Each keyword is treated **on its own**. We do not combine words, which is what a Naive Bayes classifier would do.
+- Tokenisation is simple (letters and apostrophes only). Misspellings and word forms such as "wasted" or "boringly" are not counted as the keyword.
+- All eight keywords appear in at least 2,000 reviews, so the estimates rest on large counts. A rare word would give much noisier probabilities.
