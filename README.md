@@ -475,6 +475,8 @@ The parameters do not move in one direction. $m_1$ goes −1.0, −1.45, −1.33
 
 $m_2$ moves furthest every time and $b$ barely moves. $m_2$ multiplies the features 3 and 10, $m_1$ multiplies 1 and 4, and $b$ has nothing multiplying it. A parameter attached to a bigger feature has more influence on the prediction, so the cost is more sensitive to it. That is why each parameter gets its own derivative.
 
+The error plot and parameter plot in Part 4 show all of this.
+
 ## Choices we made
 
 | Choice | What we did | Why |
@@ -482,6 +484,8 @@ $m_2$ moves furthest every time and $b$ barely moves. $m_2$ multiplies the featu
 | Learning rate | $\alpha = 0.01$ | Not given in the brief. At 0.1 the cost explodes (61 → 8,036 → 1,099,165 → 150,382,796); at 0.001 it is stable but barely moves, error still 28.27 after three updates |
 | $b$'s gradient | Element-wise vector | The brief gives $b = [1, 1]$ and says not to treat values as scalars. Each $b_i$ appears in one prediction only, so there is one route to $J$ and no summation. A shared scalar bias would give 12 instead of [1, 11] |
 | Number of updates | 3 | One per member, as instructed. Nowhere near convergence, so these show the mechanism rather than a trained model |
+
+The learning-rate comparison in Part 4 is the evidence for the α row above.
 
 ---
 
@@ -531,4 +535,30 @@ After 200 iterations: m = [-1.6516 1.2273], b = [2.7123 0.409], J = 0.035989
 
 Predictions from the final $m$ and $b$: 2.9541 and 6.3783, against targets of 5 and 6, from initial predictions of 6 and 17.
 
+## Plots
+
+**plot 1 — how the parameters move**
+
+![Parameters over iterations]
+Image Here
+
+The visual answer to the trend question. $m_2$ travels furthest at every step because its features (3 and 10) are the largest; $b_1$ and $b_2$ barely shift because nothing multiplies them. The shaded band marks the reversal between updates 1 and 2, where update 1 overshoots and update 2 pulls back.
+
+**plot 2 — how the error falls**
+
+![Error over iterations]
+Image here
+
+Kept as its own figure, as required. The cost falls at every step: 61.00, 6.50, 2.50, 2.16. The first step removes 54.5 of the 61 because the slope is steepest when the fit is worst, and each step after it does less as the surface flattens.
+
+**Learning rate comparison**
+
+![Learning rate comparison]
+Image here
+
+The same code at three learning rates, log scale. At 0.001 the error is still 28.27 after three updates; at 0.1 it diverges to 150 million. This is why we chose 0.01.
+
+## Running it
+
+Python 3 with `numpy`, `scipy` and `matplotlib`. Run the Part 4 cells top to bottom; they save the three PNGs above.
 #
