@@ -389,6 +389,9 @@ Direct check: 2,865 / 3,549 = 0.8073. This agrees with the Bayes result.
 - **Left:** a bar per keyword for the posterior `P(Positive | keyword)`, green for the keywords we expected to be positive and red for negative, with a dashed line at the 0.5 prior. A bar right of the line means the keyword raises the chance a review is positive; left of it lowers the chance.
 - **Right:** the likelihood `P(keyword | Positive)` next to the marginal `P(keyword)` for each keyword. These are the two quantities the posterior is built from, so the panel shows *why* a keyword scores high or low. It also shows why *great* is weak: it is very common overall (large marginal), so it separates the classes less.
 
+  <img width="1932" height="806" alt="part2_bayes_posteriors" src="https://github.com/user-attachments/assets/5c9cbcac-0a55-4db4-ad05-0f608555deb1" />
+
+
 ## 7. What the results tell us
 
 - **Positive keywords** have posteriors well above the 0.5 prior, from 0.67 to 0.81. **Negative keywords** are well below it, from 0.07 to 0.19. Every word moves the probability in the direction we predicted.
