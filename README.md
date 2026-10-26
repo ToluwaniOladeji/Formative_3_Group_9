@@ -305,8 +305,6 @@ Enter test height:
 
 # Part 2: Bayesian Probability on IMDb Movie Reviews
 
-**Owner:** Oladeji Toluwani  |  **Notebook:** `formative3_group_9.ipynb` (Part 2 section)
-
 ## 1. What we set out to do
 
 Use Bayes' theorem to measure how strongly individual keywords signal a **positive** review. For each keyword we compute four probabilities and show them in a table:
