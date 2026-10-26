@@ -540,21 +540,27 @@ Predictions from the final $m$ and $b$: 2.9541 and 6.3783, against targets of 5 
 **plot 1 — how the parameters move**
 
 ![Parameters over iterations]
-Image Here
+
+
+<img width="889" height="537" alt="formativeparametersoveriterations" src="https://github.com/user-attachments/assets/f01f060d-303b-406d-87e1-c8014d3f1d30" />
 
 The visual answer to the trend question. $m_2$ travels furthest at every step because its features (3 and 10) are the largest; $b_1$ and $b_2$ barely shift because nothing multiplies them. The shaded band marks the reversal between updates 1 and 2, where update 1 overshoots and update 2 pulls back.
 
 **plot 2 — how the error falls**
 
 ![Error over iterations]
-Image here
+
+<img width="889" height="540" alt="formativeerrorsoveriterations" src="https://github.com/user-attachments/assets/291ea0af-e90e-438b-81d8-6e5e01d9daf8" />
 
 Kept as its own figure, as required. The cost falls at every step: 61.00, 6.50, 2.50, 2.16. The first step removes 54.5 of the 61 because the slope is steepest when the fit is worst, and each step after it does less as the surface flattens.
 
 **Learning rate comparison**
 
 ![Learning rate comparison]
-Image here
+
+<img width="889" height="540" alt="formativelearningrateexplanation" src="https://github.com/user-attachments/assets/17490f75-75fd-4fd3-a791-51ca5180d6cc" />
+
+
 
 The same code at three learning rates, log scale. At 0.001 the error is still 28.27 after three updates; at 0.1 it diverges to 150 million. This is why we chose 0.01.
 
