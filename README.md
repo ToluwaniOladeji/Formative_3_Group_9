@@ -403,3 +403,129 @@ Direct check: 2,865 / 3,549 = 0.8073. This agrees with the Bayes result.
 - Each keyword is treated **on its own**. We do not combine words, which is what a Naive Bayes classifier would do.
 - Tokenisation is simple (letters and apostrophes only). Misspellings and word forms such as "wasted" or "boringly" are not counted as the keyword.
 - All eight keywords appear in at least 2,000 reviews, so the estimates rest on large counts. A rare word would give much noisier probabilities.
+
+---
+
+# Part 3: Gradient Descent, Manual Calculation
+
+**The full handwritten working is in `GradientDescentManualCalculationsGroup9.pdf`, in the root of this repo.** That PDF is our answer to Part 3. Everything here summarises it.
+
+Each member did one update: Update 1, Update 2, Update 3.
+
+## Setup
+
+$$\hat{y} = Xm + b, \qquad X = \begin{bmatrix} 1 & 3 \\ 4 & 10 \end{bmatrix}, \quad m = \begin{bmatrix} -1 \\ 2 \end{bmatrix}, \quad b = \begin{bmatrix} 1 \\ 1 \end{bmatrix}, \quad y = \begin{bmatrix} 5 \\ 6 \end{bmatrix}$$
+
+Each row of $X$ is a data point, each column a feature, so $n = 2$. The data never changes. Only $m$ and $b$ move.
+
+Cost: $J = \frac{1}{n}\sum(\hat{y}_i - y_i)^2$
+
+## The derivatives
+
+Substituting the model into the cost buries the parameters inside a square, so each derivative needs the chain rule. Let $e = m_1x_1 + m_2x_2 + b - y$, giving $J = \frac{1}{n}\sum e^2$.
+
+The outer link is the same every time:
+
+$$\frac{\partial J}{\partial e} = \frac{2}{n}\sum e$$
+
+Only the inner link changes, and it is just the coefficient of the parameter being differentiated. For $m_1$, the terms $m_2x_2$, $b$ and $y$ contain no $m_1$ so they vanish, leaving $x_1$. Same for $m_2$, leaving $x_2$. The bias has no feature multiplying it, so its coefficient is 1.
+
+$$\frac{\partial J}{\partial m_1} = \frac{2}{n}\sum(\hat{y}-y)x_1 \qquad \frac{\partial J}{\partial m_2} = \frac{2}{n}\sum(\hat{y}-y)x_2 \qquad \frac{\partial J}{\partial b} = \frac{2}{n}\sum(\hat{y}-y)$$
+
+In matrix form: $\frac{\partial J}{\partial m} = \frac{2}{n}X^\top e$ and $\frac{\partial J}{\partial b} = \frac{2}{n}e$.
+
+That is why the bias gradient comes out as the error with no $x$ attached.
+
+**Update rule:** $m \leftarrow m - \alpha\frac{\partial J}{\partial m}$, $b \leftarrow b - \alpha\frac{\partial J}{\partial b}$
+
+The minus sign handles both directions. A positive gradient means turning the parameter up makes things worse, so we go down; subtracting a negative moves us up.
+
+## Each update
+
+Four steps, run on whatever came out of the previous update.
+
+1. **Predict:** $\hat{y} = Xm + b$
+2. **Error and cost:** $e = \hat{y} - y$, then $J$
+3. **Gradients:** substitute $e$ and the feature columns into the three derivatives
+4. **Update:** step each parameter against its gradient, scaled by $\alpha$
+
+## Results
+
+$\alpha = 0.01$, three updates.
+
+| Iteration | $m_1$ | $m_2$ | $b$ | MSE |
+|:---:|---:|---:|:---:|---:|
+| 0 (Initialization) | −1.0000 | 2.0000 | [1.0000, 1.0000] | 61.0000 |
+| 1 | −1.4500 | 0.8700 | [0.9900, 0.8900] | 6.5033 |
+| 2 | −1.3331 | 1.1765 | [1.0185, 0.9121] | 2.4974 |
+| 3 | −1.3690 | 1.0956 | [1.0364, 0.8987] | 2.1645 |
+
+Gradients behind each step: $\partial J/\partial m$ = [45, 113], then [−11.69, −30.65], then [3.5937, 8.0917]. $\partial J/\partial b$ = [1, 11], then [−2.85, −2.21], then [−1.7851, 1.3447].
+
+## Trend: are $m$ and $b$ reducing the error?
+
+**Yes.** The cost falls at every update: 61.00, 6.50, 2.50, 2.16, and keeps falling on the longer run in Part 4, reaching 0.036 after 200 iterations.
+
+The drops shrink each time: 54.5, then 4.0, then 0.33. The gradient measures the steepness of the cost surface, and the surface is steepest where the fit is worst, so the first step covers the most ground. As the fit improves the surface flattens, the gradients shrink, and the steps shrink with them.
+
+The parameters do not move in one direction. $m_1$ goes −1.0, −1.45, −1.3331; $m_2$ goes 2.0, 0.87, 1.1765. Both reverse between updates 1 and 2, and the gradients flip sign from [45, 113] to [−11.69, −30.65]. Update 1 overshoots: the gradient only describes the slope where it was measured, and the step carries the parameters past the minimum. Update 2 pushes back. Update 3's gradients are positive again but much smaller, so the oscillation is damping out. A growing oscillation would be the problem; a shrinking one is normal.
+
+$m_2$ moves furthest every time and $b$ barely moves. $m_2$ multiplies the features 3 and 10, $m_1$ multiplies 1 and 4, and $b$ has nothing multiplying it. A parameter attached to a bigger feature has more influence on the prediction, so the cost is more sensitive to it. That is why each parameter gets its own derivative.
+
+## Choices we made
+
+| Choice | What we did | Why |
+|---|---|---|
+| Learning rate | $\alpha = 0.01$ | Not given in the brief. At 0.1 the cost explodes (61 → 8,036 → 1,099,165 → 150,382,796); at 0.001 it is stable but barely moves, error still 28.27 after three updates |
+| $b$'s gradient | Element-wise vector | The brief gives $b = [1, 1]$ and says not to treat values as scalars. Each $b_i$ appears in one prediction only, so there is one route to $J$ and no summation. A shared scalar bias would give 12 instead of [1, 11] |
+| Number of updates | 3 | One per member, as instructed. Nowhere near convergence, so these show the mechanism rather than a trained model |
+
+---
+
+# Part 4: Gradient Descent in Code
+
+The same three updates in Python, reproducing every handwritten value to four decimal places.
+
+## What the code does
+
+| Function | Role |
+|---|---|
+| `derivative_of(equation, x)` | Takes an equation as an argument and returns its slope at a point |
+| `gradient_of(equation, point)` | Same for an equation of several variables; used to check our derivation |
+| `predict(X, m, b)` | $\hat{y} = Xm + b$ |
+| `mse(y_hat, y)` | Mean squared error |
+| `gradients(X, y, m, b)` | Returns $\hat{y}$, the error, $\partial J/\partial m$ and $\partial J/\partial b$ as separate visible steps |
+| `gradient_descent_step(...)` | One update, returning the new parameters plus everything computed on the way |
+| `run_gradient_descent(...)` | Loops the step function and records $m$, $b$ and the cost at every iteration |
+
+Each formula is written once and reused (DRY), but every intermediate value is printed rather than hidden inside one function. `gradients` hands back $\hat{y}$ and the error for that reason.
+
+SciPy's API moved between versions (`scipy.differentiate.derivative` arrived in 1.15, `scipy.misc.derivative` was removed in 1.12), so `derivative_of` falls back to `scipy.optimize.approx_fprime`. It is checked against two equations whose derivatives we know by hand: $x^2$ at $x=3$ gives 6, and $(3x-4)^2$ at $x=2$ gives 12.
+
+## Verifying the derivation
+
+`cost_from_parameters` rewrites $J$ as a function of the four numbers $[m_1, m_2, b_1, b_2]$ so SciPy can differentiate it numerically, without referencing our chain rule work.
+
+            dJ/dm1   dJ/dm2   dJ/db1   dJ/db2
+chain rule: [ 45.    113.       1.      11.  ]
+scipy     : [ 45.    113.       1.      11.  ]
+max difference: 5.34e-06
+
+
+
+The residual is finite-difference rounding, not an error. Two independent methods agreeing is our evidence that the handwritten derivation is correct.
+
+## Output
+Update m1 m2 b1 b2 J
+
+0 (init) -1.0000 2.0000 1.0000 1.0000 61.0000
+1 -1.4500 0.8700 0.9900 0.8900 6.5033
+2 -1.3331 1.1765 1.0185 0.9121 2.4974
+3 -1.3690 1.0956 1.0364 0.8987 2.1645
+
+After 200 iterations: m = [-1.6516 1.2273], b = [2.7123 0.409], J = 0.035989
+
+
+Predictions from the final $m$ and $b$: 2.9541 and 6.3783, against targets of 5 and 6, from initial predictions of 6 and 17.
+
+#
